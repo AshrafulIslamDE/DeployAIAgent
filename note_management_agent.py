@@ -21,28 +21,29 @@ def read_note_from_file(file: str) -> str:
 
 @tool
 def write_note_to_file(file: str, content: str):
-    """
-    Appends content to a file. 
-    It checks if the note already exists to avoid duplicates.
-    """
+    """Appends content to a file only if it doesn't already exist."""
     try:
-        # Step 1: Check if file exists and read content to prevent duplicates
-        if os.path.exists(file):
-            with open(file, "r") as f:
-                existing_content = f.read().splitlines()
+        clean_note = content.strip()
 
-            # If the exact note is already a line in the file, stop here
-            if content.strip() in existing_content:
-                return f"Note already exists in '{file}'. No changes made."
+        # Open in r+ (Read + Write).
+        # Note: This requires the file to exist, so we use 'a' first just to ensure it exists.
+        open(file, 'a').close()
 
-        # Step 2: Append the note in a new line
-        with open(file, "a") as f:
-            # Ensure we start on a new line if the file isn't empty
-            f.write(f"\n{content.strip()}")
+        with open(file, "r+") as f:
+            existing_content = f.read()
+
+            # Check if the note is already there
+            if clean_note.lower() in existing_content.lower():
+                return f"Note already exists in '{file}'."
+
+
+            separator = "\n" if existing_content and not existing_content.endswith("\n") else ""
+            f.write(f"{separator}{clean_note}")
+
             return f"Successfully added the note to '{file}'."
 
     except Exception as ex:
-        return f"Error updating {file}: {str(ex)}"
+        return f"Error: {str(ex)}"
 
 
 system_prompts = """You are a precise note-taking assistant.
@@ -58,7 +59,7 @@ model = ChatOpenAI(model="gpt-4", temperature=0)
 agent = create_agent(model, tools=TOOLS, system_prompt=system_prompts)
 
 
-def run_agents(user_input: str) -> str:
+def run_agent(user_input: str) -> str:
     try:
         # Use "messages" (plural) for the standard LangChain agent input
         result = agent.invoke({"messages": [{"role": "user", "content": user_input}]})
@@ -67,12 +68,15 @@ def run_agents(user_input: str) -> str:
         return f"Error: {str(ex)}"
 
 
-# Testing
-print(run_agents("hi, how are you?"))
 
-while True:
-    prompt=input("Ask AI Assistant (q to quit): ")
-    if prompt=="q":
-        quit()
-    print(run_agents(prompt))
-    print(".........................................\n")
+
+if __name__ == "__main__":
+
+  print(run_agent("hi, how are you?"))
+
+  while True:
+        prompt=input("Ask AI Assistant (q to quit): ")
+        if prompt=="q":
+            quit()
+        print(run_agent(prompt))
+        print(".........................................\n")

@@ -68,4 +68,11 @@ def run_agents(user_input: str) -> str:
 
 
 # Testing
-print(run_agents("read all the notes i have previously listed"))
+print(run_agents("hi, how are you?"))
+
+while True:
+    prompt=input("Ask AI Assistant (q to quit): ")
+    if prompt=="q":
+        quit()
+    print(run_agents(prompt))
+    print(".........................................\n")
